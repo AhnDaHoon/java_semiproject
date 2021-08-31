@@ -8,11 +8,16 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Random;
 
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -22,7 +27,7 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 
-public class GameClient extends JFrame implements ActionListener, Runnable{
+public class GameClient extends JFrame implements ActionListener{
 	
 	// 큰 틀을 나누는 패널(입력창, 유저창, 문제창)
 	JPanel jplInput, jplUser, jplProblem;
@@ -251,7 +256,6 @@ public class GameClient extends JFrame implements ActionListener, Runnable{
 		
 		jbtnSend.addActionListener(this);
 		jbtnStart.addActionListener(this);
-		vchatting();
 		
 		
 		// 모든 화면에서 같은위치에 프레임을 위치시키기위한 변수
@@ -284,8 +288,11 @@ public class GameClient extends JFrame implements ActionListener, Runnable{
 		Object obj = e.getSource();
 		
 		if(obj == jbtnStart) {
+			Music m = new Music("music1.wav",true);
+			m.start();
 			System.out.println("문제출제");
 			jbtnStart.setVisible(false);
+
 			
 			
 			// jtaProblem의 문자 삭제
@@ -312,40 +319,7 @@ public class GameClient extends JFrame implements ActionListener, Runnable{
 	
 	
 	
-	
 
-	private void vchatting() {
-		// 현재 클라이언트 프로그램을 여러개 띄울 수 있도록 멀티 쓰레드로 작성
-	
-		Thread th = new Thread(this);
-		th.start();
-		
-	}
-
-	@Override
-	public void run() {
-		try {
-			s = new Socket("192.168.219.101", 5000);
-			
-			
-			
-		} catch (UnknownHostException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
-
-	
-	
-	
-	
-	
-
-	
 	
 	
 }
