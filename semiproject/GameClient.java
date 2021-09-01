@@ -1,5 +1,7 @@
 package semiproject;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -8,11 +10,18 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -22,12 +31,13 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 
-public class GameClient extends JFrame implements ActionListener{
+public class GameClient extends JFrame implements ActionListener, KeyListener{
 	
 	// 큰 틀을 나누는 패널(입력창, 유저창, 문제창)
 	JPanel jplInput, jplUser, jplProblem;
@@ -60,6 +70,22 @@ public class GameClient extends JFrame implements ActionListener{
 	Socket s;
 	
 	JButton jbtnStart;
+	
+	ProblemNumberVO nvo;
+	
+	// 시간을 표시하는 라벨
+	JLabel jlbTimeImage;
+	
+	// 문제 포인트 변수
+	int point;
+	JLabel jlbPoint;
+	JLabel jlbPointBar;
+	
+	// 문제 count
+	int problemCount = 0;
+	
+	// 문제 중복방지를 위한 변수
+	List<Integer> deduplication;
 	GameClient() {
 		// 프레임의 타이틀
 		setTitle("문제");
@@ -138,8 +164,16 @@ public class GameClient extends JFrame implements ActionListener{
 		
 		// 문제
 		jtaProblem = new JTextArea("문제가 입력될 곳 입니다.");
+		jtaProblem.setEditable(false);
 		
+		// 시간
+		jlbTimeImage = new JLabel();
 	
+		// 포인트
+		jlbPoint = new JLabel("0");
+		jlbPoint.setFont(new Font(null, ABORT, 30));
+//		jlbPointBar = new JLabel(new ImageIcon("src\\Images\\heartAceFront.gif"));
+		
 		jplUser.setBackground(Color.red);
 		jplProblem.setBackground(Color.white);
 		
@@ -205,10 +239,22 @@ public class GameClient extends JFrame implements ActionListener{
 		jtfInput.setBounds(100,10, 600, 30);
 		jbtnSend.setBounds(750,10,200,30);
 		
+		// 시작버튼
 		jbtnStart.setBounds(400, 100, 200, 200);
 		add(jbtnStart);
-		
 
+		// 포인트
+		jlbPoint.setBounds(10, 10, 100, 100);
+		add(jlbPoint);
+		
+//		문제 게이지바 
+//		jlbPointBar.setBounds(0, 100, 30, 0);
+//		add(jlbPoint);
+		
+		
+		add(jlbTimeImage);
+		
+		
 		// 말풍선 
 		jplUser1.add(jtaUser1);
 		jplUser2.add(jtaUser2);
@@ -256,7 +302,7 @@ public class GameClient extends JFrame implements ActionListener{
 		
 		jbtnSend.addActionListener(this);
 		jbtnStart.addActionListener(this);
-		
+		jtfInput.addKeyListener(this);
 		
 		// 모든 화면에서 같은위치에 프레임을 위치시키기위한 변수
 		int x, y;
@@ -288,9 +334,13 @@ public class GameClient extends JFrame implements ActionListener{
 		Object obj = e.getSource();
 		
 		if(obj == jbtnStart) {
-			Music m = new Music("music1.wav",true);
-			m.start();
-			System.out.println("문제출제");
+			
+			// 게임 제한시간
+			gameTimeImage();
+			
+//			 브금
+//			Music m = new Music("music1.wav",true);
+//			m.start();
 			jbtnStart.setVisible(false);
 
 			
@@ -299,27 +349,145 @@ public class GameClient extends JFrame implements ActionListener{
 			
 			 jtaProblem.setText(""); // 문자열 초기화
 			 
+			 
+			 // problemShuffle 쓰는 코드
+			 // 문제의 중복을 막고 문제를 섞는 클래스
+			 problemShuffle ps = new problemShuffle();
+			 deduplication = ps.problemShuffleMethod(3);
+
+			 
 			 // 출제할 문제 받아오기
 			 ProblemDAO dao = new ProblemDAO();
-			 ProblemVO vo = dao.problem(new Random().nextInt(2)+1); // 문제 랜덤으로 뽑기위해서 Random클래스로 매개변수를 준다.
+			 ProblemVO vo = dao.problem(deduplication.get(problemCount)); 
 			 jtaProblem.append(vo.getProblem());
 			 
 			 // 출체 문제 보기 받아오기
 			 ProblemNumberDAO ndao = new ProblemNumberDAO();
-			 ProblemNumberVO nvo = ndao.problem(new Random().nextInt(2)+1);
+			 nvo = ndao.problem(deduplication.get(problemCount));
 
 			 // 객관식 간격을 위해 blank변수 생성
 			 String blank = "      ";
 			 // 객관식 받아요기
 			 jtaProblem.append("\n\n\n\n " + nvo.getNumone() +blank+ nvo.getNumtwo() +blank+ nvo.getNumthree() +blank+ nvo.getNumfour());
+			 dao.close();
+			 
+
+			 
+			 
+			 
+			 
+		}else if(obj == jbtnSend) {
+			answerEvent();
 		}
 	}
 	
+	@Override
+	public void keyPressed(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+		int key = e.getKeyCode();
+		if(key == KeyEvent.VK_ENTER) {
+			answerEvent();
+		}
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+
+
+	
+	public void answerEvent() {
+		try {
+			
+			// start버튼 눌러야 객체생성이됨
+			// 사용자가 입력한 답이랑 정답 확인
+			int userInput = Integer.parseInt(jtfInput.getText().trim());
+			int answer = nvo.getAnswerNo();
+			
+				
+			// 정답을 맞출시 출력
+			if(problemCount >= 2) {
+				System.out.println("게임끝");
+				
+			}else {
+				if(userInput == answer) {
+					problemCount ++;
+					
+					System.out.println("정답");
+					jtfInput.setText("");
+					jtaProblem.setText("");
+					
+					
+					// 맞추면 100포인트
+					point += 100;
+					jlbPoint.setText(Integer.toString(point));
+					
+					ProblemDAO dao = new ProblemDAO();
+					ProblemVO vo = dao.problem(deduplication.get(problemCount)); 
+					jtaProblem.append(vo.getProblem());
+					 
+					// 출체 문제 보기 받아오기
+					ProblemNumberDAO ndao = new ProblemNumberDAO();
+					nvo = ndao.problem(deduplication.get(problemCount));
+
+					// 객관식 간격을 위해 blank변수 생성
+					String blank = "      ";
+					// 객관식 받아요기
+					jtaProblem.append("\n\n\n\n " + nvo.getNumone() +blank+ nvo.getNumtwo() +blank+ nvo.getNumthree() +blank+ nvo.getNumfour());
+					dao.close();
+					
+				}else {
+					System.out.println("떙");
+					jtfInput.setText("");
+					
+					// 문제가 틀리면 40점감점
+					point -= 40;
+					jlbPoint.setText(Integer.toString(point));
+					
+				}
+			}
+				
+			
+		}catch (NumberFormatException nfe) {
+			JOptionPane.showConfirmDialog(this, "숫자만 입력하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
+		}catch (NullPointerException npe ) {
+			JOptionPane.showConfirmDialog(this, "게임을 시작하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
+		}
+		
+	}
 	
 	
-	
+	public void gameTimeImage() {
+
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        final Runnable runnable = new Runnable() {
+            int countdownStarter = 21;
+
+            public void run() {
+
+//                System.out.println(countdownStarter);
+                countdownStarter--;
+                jlbTimeImage.setBounds(900, 0, 100, 100);
+                jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball"+countdownStarter+"_2.png"));
+                if (countdownStarter < 0) {
+                    System.out.println("Time Over!");
+                    scheduler.shutdown();
+                }
+            }
+        };
+        scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+    }
+
 	
 
 	
-	
+
+
 }

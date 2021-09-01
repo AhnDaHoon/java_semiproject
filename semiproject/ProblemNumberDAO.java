@@ -65,4 +65,17 @@ public class ProblemNumberDAO {
 	}
 	
 	
+	public void close() {
+		try {
+			if(rs != null) rs.close();
+			if(conn != null) conn.close();
+			if(pstmt != null) pstmt.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	
+	
+	}
+	
 }

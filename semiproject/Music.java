@@ -54,6 +54,7 @@ public class Music extends Thread{
 	public void run () {
 		try {
 			do {
+				Thread.sleep(3000);
 				player.play();
 				fis = new FileInputStream(file);
 				bis = new BufferedInputStream(fis);		

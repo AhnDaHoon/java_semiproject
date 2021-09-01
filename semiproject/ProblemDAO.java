@@ -35,22 +35,7 @@ public class ProblemDAO {
 	}
 	
 	
-	public void problemInsert (ProblemVO vo ) {
-		sb.append("INSERT INTO MEMBER ");
-		sb.append("VALUES (PROBLEM_TABLE_SEQUENCE, ?, ?, ? ) ");
-		try {
-			pstmt = conn.prepareStatement(sb.toString());
-			pstmt.setString(1, vo.getProblem());
-			pstmt.setString(2, vo.getAnswer());
-			pstmt.setString(3, vo.getExplanations());
-			
-			pstmt.executeUpdate();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-	}
+
 	
 	
 	public ProblemVO problem (int rnd) {
@@ -83,7 +68,18 @@ public class ProblemDAO {
 	}
 	
 	
+	public void close() {
+		try {
+			if(rs != null) rs.close();
+			if(conn != null) conn.close();
+			if(pstmt != null) pstmt.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	
+	
+	}
 	
 	
 	
