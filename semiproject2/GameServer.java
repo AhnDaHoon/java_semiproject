@@ -34,7 +34,8 @@ public class GameServer extends JFrame {
 	int cnt = 0;
 
 	// 문제섞는 클래스를 받기위한 변수
-	List<Integer> deduplication;
+	problemShuffle ps = new problemShuffle();
+	List<Integer> deduplication = ps.problemShuffle(11); // 숫자는 데이터베이스에 있는 문제의 수를 넣어주면됨
 
 	ProblemNumberVO2 nvo;
 	String stringProblem, stringNumber;
@@ -42,6 +43,9 @@ public class GameServer extends JFrame {
 	int problemCount = 0;
 
 	int problemNumber = 0;
+	
+
+
 
 	GameServer() {
 
@@ -231,25 +235,37 @@ public class GameServer extends JFrame {
 						break;
 					case "A":
 						String answer = split.length > 2 ? split[2] : null;
-						gameServer.broadcast(String.format("A:%d:%s", index, answer));
+						gameServer.broadcast(String.format("A:%d", index));
 						// TODO: 정답 체크
 
 						ProblemNumberDAO2 dao2 = new ProblemNumberDAO2();
 						int numAnswer = dao2.problemAnswer(problemNumber);
 						if (Integer.parseInt(answer) == numAnswer) {
-							gameServer.broadcast(String.format("noStart:%d:%d", index, 100));
+							gameServer.broadcast(String.format("Ok:%d:%d", index, 100));
+						} else {
+							gameServer.broadcast(String.format("No:%d", index));
 						}
 						// N: 다음문제
 						break;
-			
-					case "S":
-						Thread th = new ProblemThread();
-						th.start();
-						break;
-						
 
-						
-						
+					case "A2":
+						String chat = split.length > 2 ? split[2] : null;
+						gameServer.broadcast(String.format("chat:%d:%s", index, chat));
+						// TODO: 정답 체크
+						break;
+
+					case "S":
+						// 0번 인덱스만 시작 가능
+						if (index == 0) {
+							gameServer.broadcast(String.format("Start"));
+							Thread th = new ProblemThread();
+							th.start();
+						}else {
+							gameServer.broadcast(String.format("hurryUp:%d:%s", index, "빨리빨리"));
+						}
+
+						break;
+
 					default:
 						sendMessage("잘못된 명령입니다.");
 					}
@@ -269,15 +285,21 @@ public class GameServer extends JFrame {
 			@Override
 			public void run() {
 				for (int i = 0; i < 10; i++) {
-					String[] problem = test();
+					String[] problem = test(deduplication.get(i));
 					gameServer.broadcast(String.format("P:%s", problem[0]));
 					gameServer.broadcast(String.format("N:%s", problem[1]));
 					gameServer.broadcast(String.format("N:%s", problem[2]));
 					gameServer.broadcast(String.format("N:%s", problem[3]));
 					gameServer.broadcast(String.format("N:%s", problem[4]));
+					// 2021.09.03 추가
+					gameServer.broadcast(String.format("answer2:%s", problem[5]));
 					gameTimeImage();
 					try {
-						Thread.sleep(11000);
+						// 수정 전
+//						Thread.sleep(11000);
+						
+						// 수정 후
+						Thread.sleep(13000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -299,23 +321,21 @@ public class GameServer extends JFrame {
 		clients.set(index, null);
 	}
 
-	public String[] test() {
+	public String[] test(int deduplicationNum) {
 		// problemShuffle 쓰는 코드
 		// 문제의 중복을 막고 문제를 섞는 클래스
-		String[] a = new String[5];
-		problemShuffle ps = new problemShuffle();
-		deduplication = ps.problemShuffleMethod(11);
-		System.out.println(deduplication);
-		problemNumber = deduplication.get(problemCount);
+		String[] a = new String[6];
+		// 정답번호 받아오기
+		problemNumber = deduplication.get(deduplicationNum);
 		// 출제할 문제 받아오기
 		ProblemDAO2 dao = new ProblemDAO2();
-		ProblemVO2 vo = dao.problem(deduplication.get(problemCount));
+		ProblemVO2 vo = dao.problem(deduplication.get(deduplicationNum));
 //		 ProblemVO2 vo = dao.problem(99); 
 		a[0] = (vo.getProblem());
 
 		// 출체 문제 보기 받아오기
 		ProblemNumberDAO2 ndao = new ProblemNumberDAO2();
-		nvo = ndao.problem(deduplication.get(problemCount));
+		nvo = ndao.problem(deduplication.get(deduplicationNum));
 //		 nvo = ndao.problem(99);
 
 		// 객관식 받아요기
@@ -323,31 +343,37 @@ public class GameServer extends JFrame {
 		a[2] = (nvo.getNumtwo());
 		a[3] = (nvo.getNumthree());
 		a[4] = (nvo.getNumfour());
+		a[5] = Integer.toString(nvo.getAnswerNo());
 		return a;
 	}
 
-	 public void gameTimeImage() {
+	public void gameTimeImage() {
 
-	      final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-	      final Runnable runnable = new Runnable() {
-	         int countdownStarter = 11;
+		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+		final Runnable runnable = new Runnable() {
+			int countdownStarter = 11;
 
-	         public void run() {
+			public void run() {
 
 //	                System.out.println(countdownStarter);
-	            countdownStarter--;
-	            broadcast(String.format("Time:%d",countdownStarter));
-	            
-	            if (countdownStarter <= 0) {
-	               System.out.println("Time Over!");
-	               
-	               scheduler.shutdown();
-	            }
-	         }
-	      };
-	      scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+				countdownStarter--;
+				// 수정 전
+//				broadcast(String.format("Time:%d", countdownStarter));
 
-	   }
-	
-	
+				// 수정 후
+				broadcast(String.format("Time:%d:%b", countdownStarter, true));
+
+				if (countdownStarter <= 0) {
+					System.out.println("Time Over!");
+					// 추가
+					broadcast(String.format("Time:%d:%b", countdownStarter, false));
+
+					scheduler.shutdown();
+				}
+			}
+		};
+		scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+
+	}
+
 }// ChatServer class end

@@ -4,7 +4,9 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 import javax.swing.ButtonGroup;
 import javax.swing.ButtonModel;
@@ -32,8 +34,7 @@ public class CharChoice extends JFrame implements ActionListener{
 	Socket s;
 	String id;
 	
-	public CharChoice(Socket s, String id) {
-		this.s = s;
+	public CharChoice(String id) {
 		this.id = id;
 		
 		setLayout(null);
@@ -105,35 +106,35 @@ public class CharChoice extends JFrame implements ActionListener{
 		
 		lb1.setIcon(new ImageIcon("src\\Images\\user1.png"));
 		cb1 = new JCheckBox("´Ù¿À",true);
-		cb1.setActionCommand("user1");
+		cb1.setActionCommand("1");
 
 		lb1.setBounds(50, 120, 200, 200);
 		cb1.setBounds(40, 110, 20, 20);
 
 		lb2.setIcon(new ImageIcon("src\\Images\\user2.png"));
 		cb2 = new JCheckBox();
-		cb2.setActionCommand("user2");
+		cb2.setActionCommand("2");
 
 		lb2.setBounds(300, 120, 200, 200);
 		cb2.setBounds(280, 110, 20, 20);
 
 		lb3.setIcon(new ImageIcon("src\\Images\\user3.png"));
 		cb3 = new JCheckBox();
-		cb3.setActionCommand("user3");
+		cb3.setActionCommand("3");
 
 		lb3.setBounds(540, 120, 200, 200);
 		cb3.setBounds(520, 110, 20, 20);
 
 		lb4.setIcon(new ImageIcon("src\\Images\\user4.png"));
 		cb4 = new JCheckBox();
-		cb4.setActionCommand("user4");
+		cb4.setActionCommand("4");
 
 		lb4.setBounds(160, 400, 200, 200);
 		cb4.setBounds(140, 390, 20, 20);
 
 		lb5.setIcon(new ImageIcon("src\\Images\\user5.png"));
 		cb5 = new JCheckBox();
-		cb5.setActionCommand("user5");
+		cb5.setActionCommand("5");
 
 		lb5.setBounds(460, 400, 200, 200);
 		cb5.setBounds(440, 390, 20, 20);
@@ -177,6 +178,16 @@ public class CharChoice extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		ButtonModel bm = btnGroup.getSelection();
 		str = bm.getActionCommand();
+		
+		try {
+			s = new Socket("localhost", 5000);
+		} catch (UnknownHostException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		setVisible(false);
 		GameClient gc = new GameClient(s, id, str);

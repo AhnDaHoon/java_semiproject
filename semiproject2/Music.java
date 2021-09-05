@@ -54,7 +54,6 @@ public class Music extends Thread{
 	public void run () {
 		try {
 			do {
-				Thread.sleep(3000);
 				player.play();
 				fis = new FileInputStream(file);
 				bis = new BufferedInputStream(fis);		
@@ -66,7 +65,7 @@ public class Music extends Thread{
 	}
 	
 	public static void main(String[] args) {
-		Music m = new Music("music1.wav",true);
+		Music m = new Music("errorsound2.wav",true);
 		m.start();
 		
 	}

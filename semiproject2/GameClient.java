@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import semiproject.Music;
+//import semiproject2.Music;
 
 public class GameClient extends JFrame implements ActionListener, Runnable, KeyListener {
 
@@ -40,8 +40,8 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 	JLabel[] userCharacters;
 	JLabel[] nicknames;
 	JTextArea jtaProblem;
-	JTextField jtfInput;
-	JButton jbtnSend;
+	JTextField jtfInput, jtfInputchat;
+	JButton jbtnSend, jbtnSendchat;
 	ImageIcon icon;
 
 	Socket s;
@@ -60,8 +60,6 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 
 	// 문제 포인트 변수
 	String point = "0";
-	JLabel jlbPoint[] = new JLabel[5];
-	
 
 	// 문제 count
 	int problemCount = 0;
@@ -69,8 +67,23 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 	// 문제 중복방지를 위한 변수
 	List<Integer> deduplication;
 
-	// 
-	boolean star = true;
+	boolean inputBoolean = true;
+
+	// 스코어 캐릭이미지
+	JPanel[] facePanel;
+	JLabel[] userCharface;
+	JLabel[] facenick;
+	JPanel jplfaceUser;
+	JLabel[] jlbPoint = new JLabel[5];
+
+	JButton jlbOX[] = new JButton[5];
+
+	String nickname;
+
+	
+	//2021.09.03 수정 정답받는 변수 추가
+	String problemAnswer = "";
+	
 	GameClient(Socket s, String id, String imagePlace) {
 		this.s = s;
 		this.id = id;
@@ -93,17 +106,14 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 				super.paintComponent(g);
 			}
 		};
-		
-		
+
 		userPanels = new JPanel[5];
 		for (int i = 0; i < userPanels.length; i++) {
 			userPanels[i] = new JPanel();
 			userPanels[i].setVisible(false);
 			userPanels[i].setLayout(null);
 		}
-		
-		
-		
+
 		speechBubbles = new JTextArea[5];
 		for (int i = 0; i < speechBubbles.length; i++) {
 			speechBubbles[i] = new JTextArea();
@@ -115,7 +125,7 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 
 		userCharacters = new JLabel[5];
 		for (int i = 0; i < userCharacters.length; i++) {
-			userCharacters[i] = new JLabel(new ImageIcon("src/images/user" + (i + 1) + ".png"));
+			userCharacters[i] = new JLabel();
 			userCharacters[i].setBounds(0, 50, 200, 200);
 		}
 
@@ -127,37 +137,34 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 		}
 
 		jtfInput = new JTextField();
-		jbtnSend = new JButton("Send");
+		// 게임 시작전에 채팅 할 수 있는 채팅창
+		jtfInputchat = new JTextField();
 
+		jbtnSend = new JButton("Send");
+		jbtnSendchat = new JButton("Sendchat");
 		jtaProblem = new JTextArea("Problem ");
+		jtaProblem.setLineWrap(true);
 		jtaProblem.setEditable(false);
-		// 포인트
-		for (int i = 0; i < jlbPoint.length; i++) {
-			jlbPoint[i] = new JLabel("0");
-			jlbPoint[i].setFont(new Font(null, ABORT, 30));
-			jlbPoint[i].setBounds(10+120*i, 10, 100, 80);
-			add(jlbPoint[i]);
-		}
-		
-		
+
 		jplProblem.setBackground(Color.white);
 
 		jtaProblem.setBounds(200, 150, 600, 150);
 		jtaProblem.setBackground(new Color(255, 246, 226));
-		jtaProblem.setFont(new Font("consolas", Font.BOLD, 15));
+		jtaProblem.setFont(new Font("굴림체", Font.BOLD, 15));
 
 		jplProblem.setLayout(null);
 		jplUser.setLayout(new GridLayout());
 
 		jplInput.setBounds(0, 715, 1000, 50);
+
 		jplUser.setBounds(0, 415, 1000, 300);
 		jplProblem.setBounds(0, 0, 1000, 415);
 
 		jtfInput.setBounds(100, 10, 600, 30);
+		jtfInputchat.setBounds(100, 10, 600, 30);
 		jbtnSend.setBounds(750, 10, 200, 30);
+		jbtnSendchat.setBounds(750, 10, 200, 30);
 
-
-		
 		for (int i = 0; i < userPanels.length; i++) {
 			userPanels[i].add(speechBubbles[i]);
 			userPanels[i].add(userCharacters[i]);
@@ -168,16 +175,25 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 		jplProblem.add(jtaProblem);
 
 		jplInput.setLayout(null);
-
 		jplInput.add(jtfInput);
-		jplInput.add(jbtnSend);
+		jplInput.add(jtfInputchat);
 
+		// 정답 채팅창이므로 게임이 시작되면 true로 바꿈 (jtfInput, jbtnSend)
+		jtfInput.setVisible(false);
+		jplInput.add(jbtnSend);
+		jplInput.add(jbtnSendchat);
+		jbtnSend.setVisible(false);
 		add(jplInput);
 		add(jplUser);
 		add(jplProblem);
 
+		// 정답창 이벤트
 		jbtnSend.addActionListener(this);
 		jtfInput.addKeyListener(this);
+
+		// 채팅창 이벤트
+		jbtnSendchat.addActionListener(this);
+		jtfInputchat.addKeyListener(this);
 
 		// 수정코드
 		// 게임 시작
@@ -187,17 +203,65 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 		jlbTimeImage = new JLabel();
 		jlbTimeImage.setBounds(900, 50, 100, 100);
 		jplProblem.add(jlbTimeImage);
-		
 
 		// 시작버튼
 		jbtnStart.setBounds(0, 0, 50, 50);
 		jplInput.add(jbtnStart);
-		jbtnStart.setVisible(star);	
-		
-
-
 
 		jbtnStart.addActionListener(this);
+
+		// 스코어 캐릭이미지
+		// 점수
+		jlbPoint = new JLabel[5];
+		for (int i = 0; i < jlbPoint.length; i++) {
+			jlbPoint[i] = new JLabel("0");
+			jlbPoint[i].setHorizontalAlignment(JLabel.CENTER);
+			jlbPoint[i].setFont(new Font(null, ABORT, 30));
+			jlbPoint[i].setBounds(75, 20, 100, 30);
+		}
+
+		// 닉네임
+		facenick = new JLabel[5];
+		for (int i = 0; i < facenick.length; i++) {
+			facenick[i] = new JLabel();
+			facenick[i].setHorizontalAlignment(JLabel.CENTER);
+			facenick[i].setBounds(0, 55, 80, 30);
+		}
+		// 유저패널
+		facePanel = new JPanel[5];
+		for (int i = 0; i < facePanel.length; i++) {
+			facePanel[i] = new JPanel();
+			facePanel[i].setVisible(false);
+			facePanel[i].setLayout(null);
+		}
+		// 캐릭얼굴이미지
+		userCharface = new JLabel[5];
+		for (int i = 0; i < userCharface.length; i++) {
+			userCharface[i] = new JLabel();
+			userCharface[i].setBounds(15, 0, 50, 50);
+		}
+
+		// 스코어 전체패널
+		jplfaceUser = new JPanel();
+		jplfaceUser.setLayout(new GridLayout());
+		jplfaceUser.setBounds(0, 0, 1000, 80);
+		jplProblem.add(jplfaceUser);
+
+		for (int i = 0; i < facePanel.length; i++) {
+			facePanel[i].add(userCharface[i]);
+			facePanel[i].add(facenick[i]);
+			facePanel[i].add(jlbPoint[i]);
+			jplfaceUser.add(facePanel[i]);
+			jplfaceUser.setBackground(new Color(255, 0, 0, 0)); // 패널배경 투명하게
+//					facePanel[i].setBackground(new Color(255,0,0,0));
+		}
+
+		for (int i = 0; i < jlbOX.length; i++) {
+			jlbOX[i] = new JButton();
+			jlbOX[i].setBounds(0, 50, 200, 200);
+			userPanels[i].add(jlbOX[i]);
+			jlbOX[i].setVisible(false);
+		}
 
 		int x, y;
 
@@ -216,19 +280,28 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 		th.start();
 
 		SmemberDAO smemberDAO = new SmemberDAO();
-		String nickname = smemberDAO.getNickname(id);
+		nickname = smemberDAO.getNickname(id);
 
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				pw.println(String.format("X:%s", nickname));
-				pw.flush();
+				try {
+					pw.println(String.format("X:%s", nickname));
+					pw.flush();
+				} catch (NullPointerException ne) {
+					System.out.println("강제종료");
+				}
 				System.exit(0);
 			}
 		});
 
-		pw.println(String.format("E:%s:%s", nickname, imagePlace));
-		pw.flush();
+		try {
+			pw.println(String.format("E:%s:%s", nickname, imagePlace));
+			pw.flush();
+		} catch (NullPointerException ne) {
+			JOptionPane.showConfirmDialog(this, "소켓연결을 확인하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
+			System.exit(0);
+		}
 		smemberDAO.close();
 	}
 
@@ -271,6 +344,9 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 						int index = Integer.parseInt(v[1]);
 						userPanels[index].setVisible(true);
 						nicknames[index].setText(nickname);
+						facePanel[index].setVisible(true);
+						facenick[index].setText(nickname);
+
 					}
 					break;
 				}
@@ -281,27 +357,46 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 						String[] v = values.split(",");
 						String imagePosition = v[0];
 						int index = Integer.parseInt(v[1]);
-						userCharacters[index].setIcon(new ImageIcon("src/images/" + imagePosition + ".png"));
+						userCharacters[index].setIcon(new ImageIcon("src/images/user" + imagePosition + ".png"));
+						userCharface[index].setIcon(new ImageIcon("src/images/user1" + imagePosition + ".png"));
 					}
 					break;
 				}
 				case "X":
 					int index = Integer.parseInt(split[1]);
 					userPanels[index].setVisible(false);
+					facePanel[index].setVisible(false);
 					nicknames[index].setText("");
+					repaint();
 					break;
 				case "A":
-					String answer = split[2];
+//					String answer = split[2];
 					int index1 = Integer.parseInt(split[1]);
-					speechBubbles[index1].setText(answer);
+//					speechBubbles[index1].setText(answer);
 					break;
+
+				case "chat":
+					String chat = split[2];
+					int index2 = Integer.parseInt(split[1]);
+					speechBubbles[index2].setText(chat);
+					break;
+
 				case "P":
 					String getProblem = split[1];
 					jtaProblem.setText(getProblem + "\n\n");
 					jtfInput.setEditable(true);
+
+					for (int i = 0; i < 5; i++) {
+						try {
+							jlbOX[i].setVisible(false);
+							userCharacters[i].setVisible(true);
+						} catch (NullPointerException ne) {
+
+						}
+					}
+
 					break;
 				case "N":
-					
 					String getNum = split[1];
 					jtaProblem.append(getNum + "\n");
 					break;
@@ -309,30 +404,93 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 					// 포인트주기
 					int index3 = Integer.parseInt(split[1]);
 					int pointadd = Integer.parseInt(split[2]); // 100점
-					int point = Integer.parseInt(jlbPoint[index3].getText());//현재점수
-					
+					int point = Integer.parseInt(jlbPoint[index3].getText());// 현재점수
+
 					jlbPoint[index3].setText(Integer.toString(pointadd + point));
-					
+
 					// index
-					
+					jlbOX[index3].setIcon(new ImageIcon("src\\images\\O.png"));
+					userCharacters[index3].setVisible(false);
+					jlbOX[index3].setVisible(true);
+
 					break;
 				case "Time":
-					int countdownStarter = Integer.parseInt(split[1]);
+					// 수정 전
+//					int countdownStarter = Integer.parseInt(split[1]);
+//
+//					jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball" + countdownStarter + "_2.png"));
+//					System.out.println(countdownStarter);
+//					break;
 					
-					jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball" + countdownStarter + "_2.png"));
-					System.out.println(countdownStarter);
+					
+					// 수정 후
+					int countdownStarter = Integer.parseInt(split[1]);
+					boolean jlbTimeImageVisible = Boolean.parseBoolean(split[2]);
+
+
+					if(jlbTimeImageVisible) {
+						jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball" + countdownStarter + "_2.png"));
+						System.out.println(countdownStarter);
+						jlbTimeImage.setVisible(jlbTimeImageVisible);
+					}else {
+						jlbTimeImage.setVisible(jlbTimeImageVisible);
+						jtaProblem.setText("\t\t\t\t 정답: "+problemAnswer+"번");
+					}
+				case "Start":
+					jbtnStart.setVisible(false);
+
+					// 정답창
+					jbtnSend.setVisible(true);
+					jtfInput.setVisible(true);
+
+					// 채팅창
+					jbtnSendchat.setVisible(false);
+					jtfInputchat.setVisible(false);
+
+					for (int i = 0; i < 5; i++) {
+						speechBubbles[i].setText("");
+					}
+
+					inputBoolean = false;
+					break;
+				case "No":
+					int index6 = Integer.parseInt(split[1]);
+					jlbOX[index6].setIcon(new ImageIcon("src\\images\\X.png"));
+					userCharacters[index6].setVisible(false);
+					jlbOX[index6].setVisible(true);
+
+					break;
+
+				case "hurryUp":
+					int index7 = Integer.parseInt(split[1]);
+					String chatHurry = split[2];
+					speechBubbles[index7].setText(chatHurry);
 					break;
 					
+				case "answer2":
+					problemAnswer = split[1];
+					break;
+
+					// 2021.09.05 추가 문제출제가 끝날 시 초기화
+				case "restart":
+					jbtnStart.setVisible(true);
+					// 정답창
+					jbtnSend.setVisible(false);
+					jtfInput.setVisible(false);
+
+					// 채팅창
+					jbtnSendchat.setVisible(true);
+					jtfInputchat.setVisible(true);
 					
-				case "noStart":
-					int index4 = Integer.parseInt(split[1]);
-					if(index4 > 0) {
-						star = false;						
-					}
-				
-				
-				
-				
+					// 포인트 초기화
+					jlbPoint[0].setText("0");
+					jlbPoint[1].setText("0");
+					jlbPoint[2].setText("0");
+					jlbPoint[3].setText("0");
+					jlbPoint[4].setText("0");
+
+					
+					
 				default: {
 					JOptionPane.showMessageDialog(this, split[1]);
 					System.exit(0);
@@ -358,7 +516,11 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 	public void keyPressed(KeyEvent e) {
 		int pressKey = e.getKeyCode();
 		if (pressKey == KeyEvent.VK_ENTER) {
-			sendAnswer();
+			if (inputBoolean) {
+				chat();
+			} else {
+				sendAnswer();
+			}
 		}
 	}
 
@@ -368,33 +530,50 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 
 		if (obj == jbtnStart) {
 
-
 //			 브금
 //			Music m = new Music("music1.wav",true);
 //			m.start();
 			jbtnStart.setVisible(false);
 
-			pw.println("S:123");
+			pw.println(String.format("S:%s", nickname));
 			pw.flush();
 
 		} else if (obj == jbtnSend) {
 			sendAnswer();
+
+		} else if (obj == jbtnSendchat) {
+			chat();
 		}
 	}
 
 	private void sendAnswer() {
-	
+
 		// start버튼 눌러야 객체생성이됨
 		// 사용자가 입력한 답이랑 정답 확인
-		int userInput = Integer.parseInt(jtfInput.getText().trim());
+		try {
 
-		pw.println(String.format("A:nickname:%s", userInput));
-		pw.flush();
-		
-		jtfInput.setText("");
-		jtfInput.setEditable(false);
+			int userInput = Integer.parseInt(jtfInput.getText().trim());
+			pw.println(String.format("A:nickname:%s", userInput));
+			pw.flush();
+			jtfInput.setEditable(false);
+			jtfInput.setText("");
+
+		} catch (NumberFormatException e) {
+			JOptionPane.showConfirmDialog(this, "숫자만 입력하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
+			jtfInput.setText("");
+		}
 
 	}
 
+	private void chat() {
+
+		// start버튼 누르기전 생성됨
+		// 사용자가 입력한 문자열 출력
+		String userInput = jtfInputchat.getText().trim();
+		pw.println(String.format("A2:chat:%s", userInput));
+		pw.flush();
+		jtfInputchat.setText("");
+
+	}
 
 }

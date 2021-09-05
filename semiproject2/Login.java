@@ -12,8 +12,6 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JButton;
@@ -24,6 +22,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+
+import semiproject2.Music;
 
 public class Login extends JFrame implements ActionListener, KeyListener {
 	JLabel jlbId, jlbPw;
@@ -36,7 +36,6 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 	
 
 	// 서버와 연결
-	Socket s;
 	String id, pw;
 
 	class MyPanel extends JPanel {
@@ -64,6 +63,9 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 		MyPanel panel = new MyPanel();
 		panel.setBounds(0, 0, 800, 600);
 
+		//// 2021/09/03 추가 아이디 비밀번호 틀렸을때 소리
+		Music m = new Music("errorsound.wav",false);
+		m.start();
 		// 컴포넌트 초기화
 		jlbId = new JLabel("ID  :   ");
 		jlbPw = new JLabel("PW :  ");
@@ -102,7 +104,7 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 		jbtnRegister.setFont(new Font("Ravie", Font.BOLD, 18));
 		jbtnRegister.setForeground(Color.WHITE);
 		
-		
+	
 
 		jbtnForget.setBackground(new Color(46, 154, 235));
 		jbtnForget.setFont(new Font("Ravie", Font.BOLD, 10));
@@ -138,13 +140,12 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 		jbtnLogin.addActionListener(this);
 		jbtnRegister.addActionListener(this);
 		jbtnForget.addActionListener(this);
-
-		// 엔터키누르면 로그인을 위해 만듬, 초점에의해 기능이 사용
+		// 2021/09/03 추가 엔터키를 눌렀을때 로그인 기능
 		jtfId.addKeyListener(this);
 		jtfPw.addKeyListener(this);
 		jbtnLogin.addKeyListener(this);
 		
-		
+
 		setResizable(false);
 		setTitle("로그인");
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -175,22 +176,15 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 			if (flag) {
 				setVisible(false);
 				
-				try {
-					s = new Socket("localhost", 5000);
-				} catch (UnknownHostException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
-				CharChoice cc = new CharChoice(s, id);
+				CharChoice cc = new CharChoice(id);
 				
 
 			} else {
-				 JOptionPane.showConfirmDialog(this, "ID 또는 PW를 확인하세요.", "로그인",
-				 JOptionPane.PLAIN_MESSAGE);
+				// 2021/09/03 추가 에러 사운드
+				Music m = new Music("errorsound2.wav",true);
+				m.start();
+				JOptionPane.showConfirmDialog(this, "ID 또는 PW를 확인하세요.", "로그인",
+				JOptionPane.PLAIN_MESSAGE);
 			}
 
 		} else if (obj == jbtnForget) {
@@ -202,8 +196,8 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		int key = e.getKeyCode(); 
-		if(key == KeyEvent.VK_ENTER) {
+		// 2021/09/03 추가 엔터키를 눌렀을때 로그인 기능, 에러 사운드
+		if(e.getKeyCode() == KeyEvent.VK_ENTER) {
 			SmemberDAO dao = new SmemberDAO();
 			id = jtfId.getText();
 			pw = jtfPw.getText();
@@ -212,22 +206,20 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 			if (flag) {
 				setVisible(false);
 				
-				try {
-					s = new Socket("localhost", 5000);
-				} catch (UnknownHostException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
-				
-				CharChoice cc = new CharChoice(s, id);
+				CharChoice cc = new CharChoice(id);
+			} else {
+				Music m = new Music("errorsound2.wav",true);
+				m.start();
+				JOptionPane.showConfirmDialog(this, "ID 또는 PW를 확인하세요.", "로그인",
+				JOptionPane.PLAIN_MESSAGE);
 			}
+
+			
 		}
+
+		
 	}
 
-	
 	@Override
 	public void keyReleased(KeyEvent arg0) {
 		// TODO Auto-generated method stub
