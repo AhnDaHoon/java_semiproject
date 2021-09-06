@@ -1,7 +1,9 @@
 package semiproject2;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Toolkit;
@@ -13,6 +15,7 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -48,6 +51,8 @@ public class Register extends JFrame implements ActionListener {
 
 	JTextArea jta;
 
+	Container c = getContentPane();
+
 	JScrollPane jsp;
 	ButtonGroup btnGroup;
 
@@ -68,16 +73,16 @@ public class Register extends JFrame implements ActionListener {
 	Register() {
 
 		// 컴포넌트 초기화
-		super("회원가입");
+		super("WELCOME");
 
 		// 배경 패널을 위해 레이아웃 풀고 background 패널 생성
 		setLayout(null);
 		JLayeredPane background = new JLayeredPane();
-		background.setBounds(0, 0, 800, 1000);
+		background.setBounds(0, 0, 500, 375);
 		background.setLayout(null);
 
 		try {
-			img = ImageIO.read(new File("src/images/register.jpg"));
+			img = ImageIO.read(new File("src/images/back1.jpg"));
 		} catch (IOException e) {
 			System.out.println("이미지 로딩 실패");
 		}
@@ -85,16 +90,17 @@ public class Register extends JFrame implements ActionListener {
 		// j패널 클래스에 버튼 붙이기
 
 		MyPanel panel = new MyPanel();
-		panel.setBounds(0, 0, 800, 1000);
+		panel.setBounds(0, 0, 500, 375);
 		panel.setBackground(Color.BLUE);
 
 		// 컴포넌트 초기화
 
-		jbtnSingup = new JButton("회원가입");
-		jbtnCancel = new JButton("취소");
-		jbtnIdDoubleCheck = new JButton("중복확인");
-		jbtnEmailDoubleCheck = new JButton("중복확인");
-		jbtnNicknameDoubleCheck = new JButton("중복확인");
+		jbtnSingup = new JButton("Regist");
+
+		jbtnCancel = new JButton("Cancel");
+		jbtnIdDoubleCheck = new JButton("Check");
+		jbtnEmailDoubleCheck = new JButton("Check");
+		jbtnNicknameDoubleCheck = new JButton("Check");
 
 		jtfId = new JTextField();
 		jtfPw = new JPasswordField();
@@ -103,17 +109,25 @@ public class Register extends JFrame implements ActionListener {
 		jtfSecure = new JTextField();
 		jtfNickname = new JTextField();
 
-		jlbId = new JLabel("ID     :   ");
-		jlbPw = new JLabel("PW    :   ");
-		jlbEmail = new JLabel("Email : ");
-		jlbNickname = new JLabel("Nickname : ");
-		jlbName = new JLabel("이름   :   ");
-		jlbSecure = new JLabel("보안코드  :   ");
-		jlbSingup = new JLabel("회   원   가   입");
+		jlbId = new JLabel("ID");
+		jlbPw = new JLabel("PW");
+		jlbEmail = new JLabel("Email");
+		jlbNickname = new JLabel("NName");
+		jlbName = new JLabel("Name");
+		jlbSecure = new JLabel("SCode");
+		jlbSingup = new JLabel("WELCOME");
 
 		jta = new JTextArea();
 		jsp = new JScrollPane(jta, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
 				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+//		ImageIcon normalIcon = new ImageIcon("C:\\Users\\novit\\eclipse-workspace-dev\\Basic\\src\\image\\Regi1.gif");
+//		ImageIcon rolloverIcon = new ImageIcon("C:\\Users\\novit\\eclipse-workspace-dev\\Basic\\src\\image\\Regi2.gif");
+//		ImageIcon pressedIcon = new ImageIcon("C:\\Users\\novit\\eclipse-workspace-dev\\Basic\\src\\image\\Regi3.gif");
+
+//		JButton jbtnSingup = new JButton("Regist");
+//		jbtnSingup.setPressedIcon(pressedIcon); // pressedIcon용 이미지 등록
+//		jbtnSingup.setRolloverIcon(rolloverIcon); // rolloverIcon용 이미지 등록
 
 		// 체크박스 결과 값
 
@@ -126,39 +140,45 @@ public class Register extends JFrame implements ActionListener {
 		double width = d.getWidth();
 		double height = d.getHeight();
 
-		int x = (int) (width / 2 - 800 / 2);
-		int y = (int) (height / 2 - 800 / 2);
+		int x = (int) (width / 2 - 500 / 2);
+		int y = (int) (height / 2 - 375 / 2);
 
 		// 컴포넌트 위치 조절
 
-		jlbId.setBounds(100, 140, 300, 50);
-		jlbPw.setBounds(100, 220, 300, 50);
-		jlbEmail.setBounds(100, 300, 300, 50);
-		jlbName.setBounds(100, 380, 300, 50);
-		jlbSecure.setBounds(60, 460, 300, 50);
-		jlbNickname.setBounds(40, 540, 300, 50);
+		jlbId.setBounds(100, 50, 150, 50);
+		jlbPw.setBounds(100, 80, 150, 50);
+		jlbEmail.setBounds(100, 110, 150, 50);
+		jlbName.setBounds(100, 150, 150, 50);
+		jlbSecure.setBounds(100, 180, 180, 50);
+		jlbNickname.setBounds(100, 210, 180, 50);
 
-		jlbSingup.setBounds(330, 50, 300, 50);
+		jlbSingup.setBounds(180, 10, 180, 50);
 
-		jtfId.setBounds(220, 140, 300, 50);
-		jtfPw.setBounds(220, 220, 300, 50);
-		jtfEmail.setBounds(220, 300, 300, 50);
-		jtfName.setBounds(220, 380, 300, 50);
-		jtfSecure.setBounds(220, 460, 300, 50);
-		jtfNickname.setBounds(220, 540, 300, 50);
+		jtfId.setBounds(160, 60, 150, 25);
+		jtfPw.setBounds(160, 90, 150, 25);
+		jtfEmail.setBounds(160, 120, 150, 25);
+		jtfName.setBounds(160, 170, 150, 25);
+		jtfSecure.setBounds(160, 200, 150, 25);
+		jtfNickname.setBounds(160, 230, 150, 25);
 
-		jbtnIdDoubleCheck.setBounds(550, 140, 100, 50);
-		jbtnEmailDoubleCheck.setBounds(550, 300, 100, 50);
-		jbtnNicknameDoubleCheck.setBounds(550, 540, 100, 50);
-		jbtnSingup.setBounds(250, 700, 100, 50);
-		jbtnCancel.setBounds(450, 700, 100, 50);
+		jbtnIdDoubleCheck.setBounds(320, 60, 80, 25);
+		jbtnEmailDoubleCheck.setBounds(320, 120, 80, 25);
+		jbtnNicknameDoubleCheck.setBounds(320, 230, 80, 25);
+		jbtnSingup.setBounds(140, 300, 100, 25);
+		jbtnCancel.setBounds(280, 300, 100, 25);
 
 		// 폰트 색상 , 글꼴 조정
 
-		jbtnIdDoubleCheck.setForeground(Color.red);
+		jbtnIdDoubleCheck.setForeground(Color.BLACK);
 
-		Font f = new Font("serif", Font.CENTER_BASELINE, 30);
-		Color c = new Color(91, 12, 119);
+		Font f = new Font("Bold", Font.CENTER_BASELINE, 15);
+		Color c = new Color(126, 229, 210);
+
+		Font f1 = new Font("Bold", Font.CENTER_BASELINE, 15);
+		Color c1 = new Color(57, 77, 141);
+
+		Font f2 = new Font("Bold", Font.CENTER_BASELINE, 30);
+		Color c2 = new Color(57, 77, 141);
 
 		jlbId.setFont(f);
 		jlbPw.setFont(f);
@@ -166,7 +186,7 @@ public class Register extends JFrame implements ActionListener {
 		jlbNickname.setFont(f);
 		jlbName.setFont(f);
 		jlbSecure.setFont(f);
-		jlbSingup.setFont(f);
+		jlbSingup.setFont(f2);
 
 		jlbId.setForeground(c);
 		jlbPw.setForeground(c);
@@ -174,18 +194,21 @@ public class Register extends JFrame implements ActionListener {
 		jlbNickname.setForeground(c);
 		jlbName.setForeground(c);
 		jlbSecure.setForeground(c);
-		jlbSingup.setForeground(c);
+		jlbSingup.setForeground(c2);
 
-		jbtnIdDoubleCheck.setForeground(c);
-		jbtnEmailDoubleCheck.setForeground(c);
-		jbtnNicknameDoubleCheck.setForeground(c);
+		jbtnIdDoubleCheck.setForeground(c1);
+		jbtnEmailDoubleCheck.setForeground(c1);
+		jbtnNicknameDoubleCheck.setForeground(c1);
 
-		jbtnIdDoubleCheck.setBackground(Color.white);
-		jbtnEmailDoubleCheck.setBackground(Color.white);
-		jbtnNicknameDoubleCheck.setBackground(Color.white);
+		jbtnIdDoubleCheck.setBackground(new Color(73, 213, 187));
+		jbtnEmailDoubleCheck.setBackground(new Color(73, 213, 187));
+		jbtnNicknameDoubleCheck.setBackground(new Color(73, 213, 187));
 
-		jbtnSingup.setBackground(Color.white);
-		jbtnCancel.setBackground(Color.white);
+		jbtnSingup.setForeground(new Color(126, 229, 210));
+		jbtnCancel.setForeground(new Color(126, 229, 210));
+
+		jbtnSingup.setBackground(new Color(57, 77, 141));
+		jbtnCancel.setBackground(new Color(57, 77, 141));
 
 		jtfId.setOpaque(false);
 		jtfPw.setOpaque(false);
@@ -229,7 +252,7 @@ public class Register extends JFrame implements ActionListener {
 		jbtnSingup.addActionListener(this);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setVisible(true);
-		setBounds(x, y, 800, 800);
+		setBounds(x, y, 500, 375);
 
 	}
 
@@ -282,7 +305,10 @@ public class Register extends JFrame implements ActionListener {
 				if (jtfId.getText().contains(" ")) {
 					JOptionPane.showConfirmDialog(this, "아이디 형식이 올바르지 않습니다 (공백을 입력할 수 없습니다.)", "아이디 중복확인",
 							JOptionPane.PLAIN_MESSAGE);
-				} else if (!jtfId.getText().contains(" ")) {
+				}else if ("".equals(jtfId.getText())) {
+					JOptionPane.showConfirmDialog(this, "아이디를 입력해주세요", "아이디 중복확인", JOptionPane.PLAIN_MESSAGE);
+				}
+				else if (!jtfId.getText().contains(" ")) {
 					JOptionPane.showConfirmDialog(this, "사용할 수 있는 아이디입니다.", "아이디 중복확인", JOptionPane.PLAIN_MESSAGE);
 					jtfId.setEditable(false);
 					idOk = true;
@@ -303,14 +329,15 @@ public class Register extends JFrame implements ActionListener {
 				if (jtfNickname.getText().contains(" ")) {
 					JOptionPane.showConfirmDialog(this, "닉네임 형식이 올바르지 않습니다 (공백을 입력할 수 없습니다.)", "닉네임 중복확인",
 							JOptionPane.PLAIN_MESSAGE);
+				} else if ("".equals(jtfNickname.getText())) {
+					JOptionPane.showConfirmDialog(this, "닉네임을 입력해주세요", "닉네임 중복확인", JOptionPane.PLAIN_MESSAGE);
 				}
 
 				else if (!jtfNickname.getText().contains(" "))
 					JOptionPane.showConfirmDialog(this, "사용할 수 있는 닉네임입니다", "닉네임 중복확인", JOptionPane.PLAIN_MESSAGE);
-				jtfNickname.setEditable(false);
+				jtfNickname.setEditable(true);
 				nicknameOk = true;
 			}
-
 		} else if (obj == jbtnEmailDoubleCheck) {
 			SmemberDAO dao = new SmemberDAO();
 

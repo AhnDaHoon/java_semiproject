@@ -30,7 +30,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-//import semiproject2.Music;
+//import semiproject.Music;
 
 public class GameClient extends JFrame implements ActionListener, Runnable, KeyListener {
 
@@ -80,10 +80,9 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 
 	String nickname;
 
-	
-	//2021.09.03 수정 정답받는 변수 추가
+	// 2021.09.03 수정 정답받는 변수 추가
 	String problemAnswer = "";
-	
+
 	GameClient(Socket s, String id, String imagePlace) {
 		this.s = s;
 		this.id = id;
@@ -436,6 +435,7 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 						jlbTimeImage.setVisible(jlbTimeImageVisible);
 						jtaProblem.setText("\t\t\t\t 정답: "+problemAnswer+"번");
 					}
+					break;
 				case "Start":
 					jbtnStart.setVisible(false);
 
@@ -466,30 +466,9 @@ public class GameClient extends JFrame implements ActionListener, Runnable, KeyL
 					String chatHurry = split[2];
 					speechBubbles[index7].setText(chatHurry);
 					break;
-					
 				case "answer2":
 					problemAnswer = split[1];
 					break;
-
-					// 2021.09.05 추가 문제출제가 끝날 시 초기화
-				case "restart":
-					jbtnStart.setVisible(true);
-					// 정답창
-					jbtnSend.setVisible(false);
-					jtfInput.setVisible(false);
-
-					// 채팅창
-					jbtnSendchat.setVisible(true);
-					jtfInputchat.setVisible(true);
-					
-					// 포인트 초기화
-					jlbPoint[0].setText("0");
-					jlbPoint[1].setText("0");
-					jlbPoint[2].setText("0");
-					jlbPoint[3].setText("0");
-					jlbPoint[4].setText("0");
-
-					
 					
 				default: {
 					JOptionPane.showMessageDialog(this, split[1]);

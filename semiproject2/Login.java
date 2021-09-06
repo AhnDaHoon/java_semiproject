@@ -1,3 +1,4 @@
+
 package semiproject2;
 
 import java.awt.Color;
@@ -23,7 +24,7 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-import semiproject2.Music;
+//import semiproject2.Music;
 
 public class Login extends JFrame implements ActionListener, KeyListener {
 	JLabel jlbId, jlbPw;
@@ -64,13 +65,14 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 		panel.setBounds(0, 0, 800, 600);
 
 		//// 2021/09/03 추가 아이디 비밀번호 틀렸을때 소리
-		Music m = new Music("errorsound.wav",false);
-		m.start();
+//		Music m = new Music("errorsound.wav",false);
+//		m.start();
+		
 		// 컴포넌트 초기화
 		jlbId = new JLabel("ID  :   ");
 		jlbPw = new JLabel("PW :  ");
-		jtfId = new JTextField("User1");
-		jtfPw = new JPasswordField("1");
+		jtfId = new JTextField("");
+		jtfPw = new JPasswordField("");
 		jbtnLogin = new JButton("Login");
 		jbtnRegister = new JButton("Register");
 		jbtnForget = new JButton("Forget ID Or Pw?");//
@@ -181,8 +183,8 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 
 			} else {
 				// 2021/09/03 추가 에러 사운드
-				Music m = new Music("errorsound2.wav",true);
-				m.start();
+//				Music m = new Music("errorsound2.wav",true);
+//				m.start();
 				JOptionPane.showConfirmDialog(this, "ID 또는 PW를 확인하세요.", "로그인",
 				JOptionPane.PLAIN_MESSAGE);
 			}
@@ -208,8 +210,8 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 				
 				CharChoice cc = new CharChoice(id);
 			} else {
-				Music m = new Music("errorsound2.wav",true);
-				m.start();
+//				Music m = new Music("errorsound2.wav",true);
+//				m.start();
 				JOptionPane.showConfirmDialog(this, "ID 또는 PW를 확인하세요.", "로그인",
 				JOptionPane.PLAIN_MESSAGE);
 			}
@@ -223,6 +225,7 @@ public class Login extends JFrame implements ActionListener, KeyListener {
 	@Override
 	public void keyReleased(KeyEvent arg0) {
 		// TODO Auto-generated method stub
+		
 		
 	}
 

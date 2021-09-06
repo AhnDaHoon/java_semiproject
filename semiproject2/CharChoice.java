@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 
@@ -184,10 +185,10 @@ public class CharChoice extends JFrame implements ActionListener{
 		} catch (UnknownHostException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		} catch (IOException e1) {
+		} catch (IOException e2) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+			e2.printStackTrace();
+		} 
 		
 		setVisible(false);
 		GameClient gc = new GameClient(s, id, str);

@@ -39,6 +39,9 @@ public class GameServer extends JFrame {
 
 	ProblemNumberVO2 nvo;
 	String stringProblem, stringNumber;
+	
+	
+	
 
 	int problemCount = 0;
 
