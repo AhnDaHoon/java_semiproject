@@ -1,4 +1,4 @@
-package semiproject2;
+package semiproject;
 
 public class SkinVO {
 	String ID;

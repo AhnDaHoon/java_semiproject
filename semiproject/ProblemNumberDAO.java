@@ -65,6 +65,42 @@ public class ProblemNumberDAO {
 	}
 	
 	
+	
+	
+	public int problemAnswer(int rnd) {
+		sb.setLength(0);
+		int answerNo = 0;
+		ProblemNumberVO vo = null;
+		sb.append("SELECT answer_no ");
+		sb.append("FROM problem_table_number ");
+		sb.append("WHERE problem_no = ? "); 
+
+		
+		try {
+			pstmt = conn.prepareStatement(sb.toString());
+			pstmt.setInt(1, rnd);
+			rs = pstmt.executeQuery();
+			
+			while(rs.next()) {
+				answerNo = rs.getInt("answer_No");
+				
+				
+			}
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+
+		}
+		return answerNo;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
 	public void close() {
 		try {
 			if(rs != null) rs.close();

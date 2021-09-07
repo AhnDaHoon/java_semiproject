@@ -1,32 +1,32 @@
 package semiproject;
 
-import static java.util.concurrent.TimeUnit.SECONDS;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.Image;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.File;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.Socket;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Map;
 
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -36,458 +36,568 @@ import javax.swing.JPanel;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+//import semiproject.Music;
 
-public class GameClient extends JFrame implements ActionListener, KeyListener{
-	
-	// 큰 틀을 나누는 패널(입력창, 유저창, 문제창)
+public class GameClient extends JFrame implements ActionListener, Runnable, KeyListener {
+
 	JPanel jplInput, jplUser, jplProblem;
-	
-	// 유저패널을 나누는 5개의 유저패널
-	JPanel jplUser1, jplUser2, jplUser3, jplUser4, jplUser5;
-	
-	// 유저의 답안을 표시하는 TextArea
-	JTextArea jtaUser1, jtaUser2, jtaUser3, jtaUser4, jtaUser5;
-	
-	// 유저의 캐릭터 사진을 표시하는 라벨
-	JLabel jlbCharacter1, jlbCharacter2, jlbCharacter3, jlbCharacter4, jlbCharacter5;
-	
-	// 유저의 닉네임을 표시하는 라벨
-	JLabel name1, name2, name3, name4, name5;
-	
-	// 문제를 표시할 TextArea
+	JPanel[] userPanels;
+	JTextArea[] speechBubbles;
+	JLabel[] userCharacters;
+	JLabel[] nicknames;
 	JTextArea jtaProblem;
-	
-	// 답안을 입력할 텍스트필드
-	JTextField jtfInput;
-	
-	// 답안을 전송할 텍스트필드
-	JButton jbtnSend;
-	
-	// 문제패널 백그라운드 이미지
+	JTextField jtfInput, jtfInputchat;
+	JButton jbtnSend, jbtnSendchat;
 	ImageIcon icon;
 	
-	// 소켓
+	ImageIcon changeicon2, icon2;
+	Image img2, changeimg2;
+	
 	Socket s;
-	
+	String id;
+
+	String imagePlace;
+	PrintWriter pw;
+	BufferedReader br;
+
 	JButton jbtnStart;
-	
+
 	ProblemNumberVO nvo;
-	
+
 	// 시간을 표시하는 라벨
 	JLabel jlbTimeImage;
-	
+
 	// 문제 포인트 변수
-	int point;
-	JLabel jlbPoint;
-	JLabel jlbPointBar;
-	
+	String point = "0";
+
 	// 문제 count
 	int problemCount = 0;
-	
+
 	// 문제 중복방지를 위한 변수
 	List<Integer> deduplication;
-	GameClient() {
-		// 프레임의 타이틀
-		setTitle("문제");
-		
-		// 배치관리자 없음
+
+	boolean inputBoolean = true;
+
+	// 스코어 캐릭이미지
+	JPanel[] facePanel;
+	JLabel[] userCharface;
+	JLabel[] facenick;
+	JPanel jplfaceUser;
+	JLabel[] jlbPoint = new JLabel[5];
+
+	JButton jlbOX[] = new JButton[5];
+
+	String nickname;
+
+	// 2021.09.03 수정 정답받는 변수 추가
+	String problemAnswer = "";
+
+	float scoreRank[] = new float[5];
+	Map<Float, String> nicknameMap = new HashMap<>();
+	Map<Float, Integer> characterMap = new HashMap<>();
+	Integer charNumber[] = new Integer[5];
+
+	GameClient(Socket s, String id, String imagePlace) {
+		this.s = s;
+		this.id = id;
+		this.imagePlace = imagePlace;
+
+		setTitle("GameClient");
+
 		setLayout(null);
-		
-		// 입력창 패널 초기화
+
 		jplInput = new JPanel();
-		// 유저창 패널 초기화
+
 		jplUser = new JPanel();
-		
-		
-		icon = new ImageIcon("src\\images\\problembg.png");
-		// 문제창 패널 초기화
+
+		icon = new ImageIcon("src/images/problembg.jpg");
+
 		jplProblem = new JPanel() {
-			 public void paintComponent(Graphics g) {
-	                g.drawImage(icon.getImage(), 0, 0, null);
-	                setOpaque(false); //그림을 표시하게 설정,투명하게 조절
-	                super.paintComponent(g);
-	            }
+			public void paintComponent(Graphics g) {
+				g.drawImage(icon.getImage(), 0, 80, null);
+				setOpaque(false);
+				super.paintComponent(g);
+			}
 		};
-		
-		
-		
-		
-		
-		// 유저 패널 초기화
-		jplUser1 = new JPanel();
-		jplUser2 = new JPanel();
-		jplUser3 = new JPanel();
-		jplUser4 = new JPanel();
-		jplUser5 = new JPanel();
-		
-		// 말풍선 TextArea 초기화
-		jtaUser1 = new JTextArea("User1 말풍선");
-		jtaUser2 = new JTextArea("User2 말풍선");
-		jtaUser3 = new JTextArea("User3 말풍선");
-		jtaUser4 = new JTextArea("User4 말풍선");
-		jtaUser5 = new JTextArea("User5 말풍선");
-		
-		// 캐릭터 라벨 초기화
-		jlbCharacter1 = new JLabel(new ImageIcon("src\\Images\\user1.png"));
-		jlbCharacter2 = new JLabel(new ImageIcon("src\\Images\\user2.png"));
-		jlbCharacter3 = new JLabel(new ImageIcon("src\\Images\\user3.png"));
-		jlbCharacter4 = new JLabel(new ImageIcon("src\\Images\\user4.png"));
-		jlbCharacter5 = new JLabel(new ImageIcon("src\\Images\\user5.png"));
-		
-		// 닉네임 라벨 초기화
-		name1 = new JLabel("User1");
-		name2 = new JLabel("User2");
-		name3 = new JLabel("User3");
-		name4 = new JLabel("User4");
-		name5 = new JLabel("User5");
-		
-		
-		
-		// 답안 입력 TextField와 답안 전송할 버튼 초기화
+
+		userPanels = new JPanel[5];
+		for (int i = 0; i < userPanels.length; i++) {
+			userPanels[i] = new JPanel();
+			userPanels[i].setVisible(false);
+			userPanels[i].setLayout(null);
+		}
+
+		speechBubbles = new JTextArea[5];
+		for (int i = 0; i < speechBubbles.length; i++) {
+			speechBubbles[i] = new JTextArea();
+			speechBubbles[i].setBackground(Color.black);
+			speechBubbles[i].setForeground(Color.white);
+			speechBubbles[i].setBounds(0, 0, 200, 50);
+			speechBubbles[i].setEditable(false);
+		}
+
+		userCharacters = new JLabel[5];
+		for (int i = 0; i < userCharacters.length; i++) {
+			userCharacters[i] = new JLabel();
+			userCharacters[i].setBounds(0, 50, 200, 200);
+		}
+
+		nicknames = new JLabel[5];
+		for (int i = 0; i < nicknames.length; i++) {
+			nicknames[i] = new JLabel();
+			nicknames[i].setHorizontalAlignment(JLabel.CENTER);
+			nicknames[i].setBounds(0, 250, 200, 50);
+		}
+
 		jtfInput = new JTextField();
-		jbtnSend = new JButton("전송");
-		
-		
-		// 게임 시작
-		jbtnStart = new JButton(new ImageIcon("src\\Images\\gamestart.gif"));
-		
-		
-		
-		// 닉네임 라벨 중앙 정렬
-		name1.setHorizontalAlignment(JLabel.CENTER);
-		name2.setHorizontalAlignment(JLabel.CENTER);
-		name3.setHorizontalAlignment(JLabel.CENTER);
-		name4.setHorizontalAlignment(JLabel.CENTER);
-		name5.setHorizontalAlignment(JLabel.CENTER);
+		// 게임 시작전에 채팅 할 수 있는 채팅창
+		jtfInputchat = new JTextField();
 
-		
-		
-		// 문제
-		jtaProblem = new JTextArea("문제가 입력될 곳 입니다.");
+		jbtnSend = new JButton("Send");
+		jbtnSendchat = new JButton("Sendchat");
+		jtaProblem = new JTextArea("");
+		jtaProblem.setLineWrap(true);
 		jtaProblem.setEditable(false);
-		
-		// 시간
-		jlbTimeImage = new JLabel();
-	
-		// 포인트
-		jlbPoint = new JLabel("0");
-		jlbPoint.setFont(new Font(null, ABORT, 30));
-//		jlbPointBar = new JLabel(new ImageIcon("src\\Images\\heartAceFront.gif"));
-		
-		jplUser.setBackground(Color.red);
+
 		jplProblem.setBackground(Color.white);
-		
-		
-		jtaUser1.setBackground(Color.black);
-		jtaUser2.setBackground(Color.black);
-		jtaUser3.setBackground(Color.black);
-		jtaUser4.setBackground(Color.black);
-		jtaUser5.setBackground(Color.black);
 
-		jtaUser1.setForeground(Color.white);
-		jtaUser2.setForeground(Color.white);
-		jtaUser3.setForeground(Color.white);
-		jtaUser4.setForeground(Color.white);
-		jtaUser5.setForeground(Color.white);
-		
-		
-		
-		jplUser1.setLayout(null);
-		jplUser2.setLayout(null);
-		jplUser3.setLayout(null);
-		jplUser4.setLayout(null);
-		jplUser5.setLayout(null);
-
-		
-		
-		
-		
-		// 컴포넌트 위치 및 사이즈 초기화
-		jtaUser1.setBounds(0, 0, 200, 50);
-		jtaUser2.setBounds(0, 0, 200, 50);
-		jtaUser3.setBounds(0, 0, 200, 50);
-		jtaUser4.setBounds(0, 0, 200, 50);
-		jtaUser5.setBounds(0, 0, 200, 50);
-	
-		jlbCharacter1.setBounds(0, 50, 200, 200);
-		jlbCharacter2.setBounds(0, 50, 200, 200);
-		jlbCharacter3.setBounds(0, 50, 200, 200);
-		jlbCharacter4.setBounds(0, 50, 200, 200);
-		jlbCharacter5.setBounds(0, 50, 200, 200);
-		
-		name1.setBounds(0, 250, 200, 50);
-		name2.setBounds(0, 250, 200, 50);
-		name3.setBounds(0, 250, 200, 50);
-		name4.setBounds(0, 250, 200, 50);
-		name5.setBounds(0, 250, 200, 50);
-		
-		
-		
-		jtaProblem.setBounds(200, 150, 600, 100);
-		jtaProblem.setBackground(new Color(255,246,226));
+		jtaProblem.setBounds(160, 150, 640, 190);
+		jtaProblem.setBackground(Color.white);
 		jtaProblem.setFont(new Font("굴림체", Font.BOLD, 15));
-		
-		
+
 		jplProblem.setLayout(null);
 		jplUser.setLayout(new GridLayout());
-		
+
 		jplInput.setBounds(0, 715, 1000, 50);
+
 		jplUser.setBounds(0, 415, 1000, 300);
 		jplProblem.setBounds(0, 0, 1000, 415);
-		
-		
-		jtfInput.setBounds(100,10, 600, 30);
-		jbtnSend.setBounds(750,10,200,30);
-		
-		// 시작버튼
-		jbtnStart.setBounds(400, 100, 200, 200);
-		add(jbtnStart);
 
-		// 포인트
-		jlbPoint.setBounds(10, 10, 100, 100);
-		add(jlbPoint);
-		
-//		문제 게이지바 
-//		jlbPointBar.setBounds(0, 100, 30, 0);
-//		add(jlbPoint);
-		
-		
-		add(jlbTimeImage);
-		
-		
-		// 말풍선 
-		jplUser1.add(jtaUser1);
-		jplUser2.add(jtaUser2);
-		jplUser3.add(jtaUser3);
-		jplUser4.add(jtaUser4);
-		jplUser5.add(jtaUser5);
-		
-		// 캐릭터
-		jplUser1.add(jlbCharacter1);
-		jplUser2.add(jlbCharacter2);
-		jplUser3.add(jlbCharacter3);
-		jplUser4.add(jlbCharacter4);
-		jplUser5.add(jlbCharacter5);
-		
-		// 닉네임
-		jplUser1.add(name1);
-		jplUser2.add(name2);
-		jplUser3.add(name3);
-		jplUser4.add(name4);
-		jplUser5.add(name5);
-		
-		
+		jtfInput.setBounds(100, 10, 600, 30);
+		jtfInputchat.setBounds(100, 10, 600, 30);
+		jbtnSend.setBounds(750, 10, 200, 30);
+		jbtnSendchat.setBounds(750, 10, 200, 30);
 
-		// 각 유저 패널 유저패널에 붙이기
-		jplUser.add(jplUser1);
-		jplUser.add(jplUser2);
-		jplUser.add(jplUser3);
-		jplUser.add(jplUser4);
-		jplUser.add(jplUser5);
-		
-		
-		
+		for (int i = 0; i < userPanels.length; i++) {
+			userPanels[i].add(speechBubbles[i]);
+			userPanels[i].add(userCharacters[i]);
+			userPanels[i].add(nicknames[i]);
+			jplUser.add(userPanels[i]);
+		}
+
 		jplProblem.add(jtaProblem);
-		
-	
+
 		jplInput.setLayout(null);
-		
 		jplInput.add(jtfInput);
+		jplInput.add(jtfInputchat);
+
+		// 정답 채팅창이므로 게임이 시작되면 true로 바꿈 (jtfInput, jbtnSend)
+		jtfInput.setVisible(false);
 		jplInput.add(jbtnSend);
-		
-		
+		jplInput.add(jbtnSendchat);
+		jbtnSend.setVisible(false);
 		add(jplInput);
 		add(jplUser);
 		add(jplProblem);
-		
+
+		// 정답창 이벤트
 		jbtnSend.addActionListener(this);
-		jbtnStart.addActionListener(this);
 		jtfInput.addKeyListener(this);
-		
-		// 모든 화면에서 같은위치에 프레임을 위치시키기위한 변수
+
+		// 채팅창 이벤트
+		jbtnSendchat.addActionListener(this);
+		jtfInputchat.addKeyListener(this);
+
+		// 수정코드
+		// 게임 시작
+		jbtnStart = new JButton(new ImageIcon("src\\Images\\gamestart.gif"));
+
+		// 시간
+		jlbTimeImage = new JLabel();
+		jlbTimeImage.setBounds(900, 80, 100, 100);
+		jplProblem.add(jlbTimeImage);
+
+		//게임시작버튼
+		icon2 = new ImageIcon("src/images/gamestart2.png");
+		img2 = icon2.getImage();
+		changeimg2 = img2.getScaledInstance(100, 50, Image.SCALE_DEFAULT);
+		changeicon2 = new ImageIcon(changeimg2);
+		jbtnStart = new JButton(changeicon2);
+		jbtnStart.setFocusPainted(false);
+		jbtnStart.setContentAreaFilled(false);
+		jbtnStart.setBorderPainted(false);
+		jbtnStart.setBounds(0, 0, 100, 50);
+		jplInput.add(jbtnStart);
+
+		jbtnStart.addActionListener(this);
+
+		// 스코어 캐릭이미지
+		// 점수
+		jlbPoint = new JLabel[5];
+		for (int i = 0; i < jlbPoint.length; i++) {
+			jlbPoint[i] = new JLabel("0");
+			jlbPoint[i].setHorizontalAlignment(JLabel.CENTER);
+			jlbPoint[i].setFont(new Font(null, ABORT, 30));
+			jlbPoint[i].setBounds(75, 20, 100, 30);
+		}
+
+		// 닉네임
+		facenick = new JLabel[5];
+		for (int i = 0; i < facenick.length; i++) {
+			facenick[i] = new JLabel();
+			facenick[i].setHorizontalAlignment(JLabel.CENTER);
+			facenick[i].setBounds(0, 55, 80, 30);
+		}
+		// 유저패널
+		facePanel = new JPanel[5];
+		for (int i = 0; i < facePanel.length; i++) {
+			facePanel[i] = new JPanel();
+			facePanel[i].setVisible(false);
+			facePanel[i].setLayout(null);
+			facePanel[i].setBackground(Color.white);
+		}
+		// 캐릭얼굴이미지
+		userCharface = new JLabel[5];
+		for (int i = 0; i < userCharface.length; i++) {
+			userCharface[i] = new JLabel();
+			userCharface[i].setBounds(15, 0, 50, 50);
+		}
+
+		// 스코어 전체패널
+		jplfaceUser = new JPanel();
+		jplfaceUser.setLayout(new GridLayout());
+		jplfaceUser.setBounds(0, 0, 1000, 80);
+		jplfaceUser.setBackground(Color.white);
+		jplProblem.add(jplfaceUser);
+
+		for (int i = 0; i < facePanel.length; i++) {
+			facePanel[i].add(userCharface[i]);
+			facePanel[i].add(facenick[i]);
+			facePanel[i].add(jlbPoint[i]);
+			jplfaceUser.add(facePanel[i]);
+			facePanel[i].setOpaque(false);
+		}
+
+		for (int i = 0; i < jlbOX.length; i++) {
+			jlbOX[i] = new JButton();
+			jlbOX[i].setBounds(0, 50, 200, 200);
+			userPanels[i].add(jlbOX[i]);
+			jlbOX[i].setVisible(false);
+		}
+
 		int x, y;
-		
-		// 해당 스크린의 사이즈 알아오기
+
 		Dimension d = Toolkit.getDefaultToolkit().getScreenSize();
-		
+
 		double width = d.getWidth();
 		double height = d.getHeight();
-		
-		x = (int) (width / 2 - 1015 /2);
-		y = (int) (height/2 - 800 / 2);
-		
-			
-		setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+		x = (int) (width / 2 - 1015 / 2);
+		y = (int) (height / 2 - 800 / 2);
+
 		setVisible(true);
 		setBounds(x, y, 1015, 800);
+
+		Thread th = new Thread(this);
+		th.start();
+
+		SmemberDAO smemberDAO = new SmemberDAO();
+		nickname = smemberDAO.getNickname(id);
+
+		this.addWindowListener(new WindowAdapter() {
+			@Override
+			public void windowClosing(WindowEvent e) {
+				try {
+					pw.println(String.format("X:%s", nickname));
+					pw.flush();
+				} catch (NullPointerException ne) {
+					System.out.println("강제종료");
+				}
+				System.exit(0);
+			}
+		});
+
+		try {
+			pw.println(String.format("E:%s:%s", nickname, imagePlace));
+			pw.flush();
+		} catch (NullPointerException ne) {
+			JOptionPane.showConfirmDialog(this, "소켓연결을 확인하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
+			System.exit(0);
+		}
+		smemberDAO.close();
 	}
 
-	
-	public static void main(String[] args) {
-		new GameClient();
-		
+// public static void main(String[] args) {
+// new GameClient();
+// }
+
+	@Override
+	public void run() {
+		try {
+			// s = new Socket("localhost", 5000);
+			pw = new PrintWriter(new BufferedWriter(new OutputStreamWriter(s.getOutputStream())));
+			br = new BufferedReader(new InputStreamReader(s.getInputStream()));
+
+			// client -> server
+			// E:nickname:image
+			// X:nickname
+			// A:nickname:정답
+
+			// server -> client
+			// E:index:nickname
+			// X:index
+			// A:index:정답
+
+			// 11: 11
+			// 22:
+
+			while (true) {
+				String message = br.readLine();
+				String[] split = message.split(":");
+				String action = split[0];
+				// int index = Integer.parseInt(split[1]);
+				switch (action) {
+				case "E": {
+					String restMessage = split[1];
+					String[] content = restMessage.split("\\|");
+					for (String values : content) {
+						String[] v = values.split(",");
+						String nickname = v[0];
+						int index = Integer.parseInt(v[1]);
+						userPanels[index].setVisible(true);
+						nicknames[index].setText(nickname);
+						facePanel[index].setVisible(true);
+						facenick[index].setText(nickname);
+					}
+					break;
+				}
+				case "C": {
+					String restMessage = split[1];
+					String[] content = restMessage.split("\\|");
+					for (String values : content) {
+						String[] v = values.split(",");
+						String imagePosition = v[0];
+						int index = Integer.parseInt(v[1]);
+
+						charNumber[index] = Integer.parseInt(imagePosition);
+						userCharacters[index].setIcon(new ImageIcon("src/images/user" + imagePosition + ".png"));
+						userCharface[index].setIcon(new ImageIcon("src/images/user1" + imagePosition + ".png"));
+					}
+					break;
+				}
+				case "X":
+					int index = Integer.parseInt(split[1]);
+					userPanels[index].setVisible(false);
+					facePanel[index].setVisible(false);
+					nicknames[index].setText("");
+					repaint();
+					break;
+				case "A":
+//					String answer = split[2];
+					int index1 = Integer.parseInt(split[1]);
+//					speechBubbles[index1].setText(answer);
+					break;
+
+				case "chat":
+					String chat = split[2];
+					int index2 = Integer.parseInt(split[1]);
+					speechBubbles[index2].setText(chat);
+					break;
+
+				case "P":
+					String getProblem = split[1];
+					jtaProblem.setText(getProblem + "\n\n");
+					jtfInput.setEditable(true);
+
+					for (int i = 0; i < 5; i++) {
+						try {
+							jlbOX[i].setVisible(false);
+							userCharacters[i].setVisible(true);
+						} catch (NullPointerException ne) {
+
+						}
+					}
+
+					break;
+				case "N":
+					String getNum = split[1];
+					jtaProblem.append(getNum + "\n");
+					break;
+				case "Ok":
+					// 포인트주기
+					int index3 = Integer.parseInt(split[1]);
+					float pointadd = Float.parseFloat(split[2]); // 100점
+					int point = Integer.parseInt(jlbPoint[index3].getText());// 현재점수
+					scoreRank[index3] = pointadd + point;
+					jlbPoint[index3].setText(Integer.toString((int) pointadd + point));
+
+					// index
+					jlbOX[index3].setIcon(new ImageIcon("src\\images\\O.png"));
+					userCharacters[index3].setVisible(false);
+					jlbOX[index3].setVisible(true);
+
+					break;
+				case "Time":
+					// 수정 전
+//					int countdownStarter = Integer.parseInt(split[1]);
+//
+//					jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball" + countdownStarter + "_2.png"));
+//					System.out.println(countdownStarter);
+//					break;
+
+					// 수정 후
+					int countdownStarter = Integer.parseInt(split[1]);
+					boolean jlbTimeImageVisible = Boolean.parseBoolean(split[2]);
+
+					if (jlbTimeImageVisible) {
+						jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball" + countdownStarter + ".png"));
+						System.out.println(countdownStarter);
+						jlbTimeImage.setVisible(jlbTimeImageVisible);
+					} else {
+						jtfInput.setEditable(false);
+						jlbTimeImage.setVisible(jlbTimeImageVisible);
+						jtaProblem.setText("\t\t\t\t 정답: " + problemAnswer + "번");
+					}
+					break;
+				case "Start":
+					jbtnStart.setVisible(false);
+
+					// 정답창
+					jbtnSend.setVisible(true);
+					jtfInput.setVisible(true);
+
+					// 채팅창
+					jbtnSendchat.setVisible(false);
+					jtfInputchat.setVisible(false);
+
+					for (int i = 0; i < 5; i++) {
+						speechBubbles[i].setText("");
+					}
+
+					inputBoolean = false;
+					break;
+				case "No":
+					int index6 = Integer.parseInt(split[1]);
+					jlbOX[index6].setIcon(new ImageIcon("src\\images\\X.png"));
+					userCharacters[index6].setVisible(false);
+					jlbOX[index6].setVisible(true);
+
+					break;
+
+				case "hurryUp":
+					int index7 = Integer.parseInt(split[1]);
+					String chatHurry = split[2];
+					speechBubbles[index7].setText(chatHurry);
+					break;
+				case "answer2":
+					problemAnswer = split[1];
+					break;
+				case "endGame":
+					endGame();
+					break;
+				default: 
+					JOptionPane.showMessageDialog(this, split[1]);
+					setVisible(false);
+					new Channel(id);
+				}
+			}
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 	}
-	
+
+	private void endGame() {
+		pw.println(String.format("X:%s", nickname));
+		pw.flush();
+		this.setVisible(false);
+		for (int i = 0; i < 5; i++) {
+			nicknameMap.put(scoreRank[i], nicknames[i].getText());
+			characterMap.put(scoreRank[i], charNumber[i]);
+		}
+		Arrays.sort(scoreRank);
+		float temp;
+		temp = scoreRank[0];
+		scoreRank[0] = scoreRank[4];
+		scoreRank[4] = temp;
+
+		temp = scoreRank[1];
+		scoreRank[1] = scoreRank[3];
+		scoreRank[3] = temp;
+		new ShowRank(scoreRank, nicknameMap, characterMap, id);
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e) {
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		int pressKey = e.getKeyCode();
+		if (pressKey == KeyEvent.VK_ENTER) {
+			if (inputBoolean) {
+				chat();
+			} else {
+				sendAnswer();
+			}
+		}
+	}
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		Object obj = e.getSource();
-		
-		if(obj == jbtnStart) {
-			
-			// 게임 제한시간
-			gameTimeImage();
-			
+
+		if (obj == jbtnStart) {
+
 //			 브금
 //			Music m = new Music("music1.wav",true);
 //			m.start();
 			jbtnStart.setVisible(false);
 
-			
-			
-			// jtaProblem의 문자 삭제
-			
-			 jtaProblem.setText(""); // 문자열 초기화
-			 
-			 
-			 // problemShuffle 쓰는 코드
-			 // 문제의 중복을 막고 문제를 섞는 클래스
-			 problemShuffle ps = new problemShuffle();
-			 deduplication = ps.problemShuffleMethod(3);
+			pw.println(String.format("S:%s", nickname));
+			pw.flush();
 
-			 
-			 // 출제할 문제 받아오기
-			 ProblemDAO dao = new ProblemDAO();
-			 ProblemVO vo = dao.problem(deduplication.get(problemCount)); 
-			 jtaProblem.append(vo.getProblem());
-			 
-			 // 출체 문제 보기 받아오기
-			 ProblemNumberDAO ndao = new ProblemNumberDAO();
-			 nvo = ndao.problem(deduplication.get(problemCount));
+		} else if (obj == jbtnSend) {
+			sendAnswer();
 
-			 // 객관식 간격을 위해 blank변수 생성
-			 String blank = "      ";
-			 // 객관식 받아요기
-			 jtaProblem.append("\n\n\n\n " + nvo.getNumone() +blank+ nvo.getNumtwo() +blank+ nvo.getNumthree() +blank+ nvo.getNumfour());
-			 dao.close();
-			 
-
-			 
-			 
-			 
-			 
-		}else if(obj == jbtnSend) {
-			answerEvent();
-		}
-	}
-	
-	@Override
-	public void keyPressed(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {
-		int key = e.getKeyCode();
-		if(key == KeyEvent.VK_ENTER) {
-			answerEvent();
+		} else if (obj == jbtnSendchat) {
+			chat();
 		}
 	}
 
-	@Override
-	public void keyTyped(KeyEvent arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+	private void sendAnswer() {
 
-
-	
-	public void answerEvent() {
+		// start버튼 눌러야 객체생성이됨
+		// 사용자가 입력한 답이랑 정답 확인
 		try {
-			
-			// start버튼 눌러야 객체생성이됨
-			// 사용자가 입력한 답이랑 정답 확인
+
 			int userInput = Integer.parseInt(jtfInput.getText().trim());
-			int answer = nvo.getAnswerNo();
-			
-				
-			// 정답을 맞출시 출력
-			if(problemCount >= 2) {
-				System.out.println("게임끝");
-				
-			}else {
-				if(userInput == answer) {
-					problemCount ++;
-					
-					System.out.println("정답");
-					jtfInput.setText("");
-					jtaProblem.setText("");
-					
-					
-					// 맞추면 100포인트
-					point += 100;
-					jlbPoint.setText(Integer.toString(point));
-					
-					ProblemDAO dao = new ProblemDAO();
-					ProblemVO vo = dao.problem(deduplication.get(problemCount)); 
-					jtaProblem.append(vo.getProblem());
-					 
-					// 출체 문제 보기 받아오기
-					ProblemNumberDAO ndao = new ProblemNumberDAO();
-					nvo = ndao.problem(deduplication.get(problemCount));
+			pw.println(String.format("A:nickname:%s", userInput));
+			pw.flush();
+			jtfInput.setEditable(false);
+			jtfInput.setText("");
 
-					// 객관식 간격을 위해 blank변수 생성
-					String blank = "      ";
-					// 객관식 받아요기
-					jtaProblem.append("\n\n\n\n " + nvo.getNumone() +blank+ nvo.getNumtwo() +blank+ nvo.getNumthree() +blank+ nvo.getNumfour());
-					dao.close();
-					
-				}else {
-					System.out.println("떙");
-					jtfInput.setText("");
-					
-					// 문제가 틀리면 40점감점
-					point -= 40;
-					jlbPoint.setText(Integer.toString(point));
-					
-				}
-			}
-				
-			
-		}catch (NumberFormatException nfe) {
+		} catch (NumberFormatException e) {
 			JOptionPane.showConfirmDialog(this, "숫자만 입력하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
-		}catch (NullPointerException npe ) {
-			JOptionPane.showConfirmDialog(this, "게임을 시작하세요.", "확인", JOptionPane.PLAIN_MESSAGE);
+			jtfInput.setText("");
 		}
-		
+
 	}
-	
-	
-	public void gameTimeImage() {
 
-        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-        final Runnable runnable = new Runnable() {
-            int countdownStarter = 21;
+	private void chat() {
 
-            public void run() {
+		// start버튼 누르기전 생성됨
+		// 사용자가 입력한 문자열 출력
+		String userInput = jtfInputchat.getText().trim();
+		pw.println(String.format("A2:chat:%s", userInput));
+		pw.flush();
+		jtfInputchat.setText("");
 
-//                System.out.println(countdownStarter);
-                countdownStarter--;
-                jlbTimeImage.setBounds(900, 0, 100, 100);
-                jlbTimeImage.setIcon(new ImageIcon("src\\Images\\ball"+countdownStarter+"_2.png"));
-                if (countdownStarter < 0) {
-                    System.out.println("Time Over!");
-                    scheduler.shutdown();
-                }
-            }
-        };
-        scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
-    }
-
-	
-
-	
-
+	}
 
 }

@@ -53,9 +53,7 @@ public class ProblemDAO {
 			
 			while(rs.next()) {
 				String priblem = rs.getString("problem");
-				String answer = rs.getString("answer");
-				String explanations = rs.getString("explanations");
-				vo = new ProblemVO(priblem, answer, explanations);
+				vo = new ProblemVO(priblem);
 				
 			}
 		} catch (SQLException e) {

@@ -1,4 +1,4 @@
-package semiproject2;
+package semiproject;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -21,14 +21,19 @@ import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 public class App extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private static final String TITLE = "My First Media Player";
-	private static final String VIDEO_PATH = "D:\\dev\\eclipse\\workspace\\basic\\src\\commercial\\commercial1.mp4";
+	String videoPath;
 	private final EmbeddedMediaPlayerComponent mediaPlayerComponent;
 	JLabel jlb;
-
-	public App(String title) {
+	String id;
+	
+	Music m;
+	
+	public App(String title, String videoPath, String id) {
 		super(title);
+		this.m = Login.m;
 		mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
-
+		this.videoPath = videoPath;
+		this.id = id;
 		setBounds(100, 100, 600, 400);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		addWindowListener(new WindowAdapter() {
@@ -48,52 +53,39 @@ public class App extends JFrame {
 		contentPane.add(controlsPane, BorderLayout.SOUTH);
 		setContentPane(contentPane);
 		setVisible(true);
+		setLocationRelativeTo(null);
 		mediaPlayerComponent.mediaPlayer().controls().play();
 
 	}
 
 	public void initialize() {
 		mediaPlayerComponent.mediaPlayer().controls().play();
-		
+
 		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 		final Runnable runnable = new Runnable() {
 			int countdownStarter = 31;
 
 			public void run() {
 				countdownStarter--;
-				jlb.setText(countdownStarter+"초 남았습니다.");
+				jlb.setText(countdownStarter + "초 남았습니다.");
 				System.out.println(countdownStarter);
 				if (countdownStarter <= 0) {
 					scheduler.shutdown();
 					// 뽑기 페이지로 넘어가기 기능 추가
-					new Draw();
+					new Draw(id);
 					setVisible(false);
+					m = new Music("music1.wav",true);
+					m.start();
 				}
 			}
 		};
 		scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
-		
 
 	}
 
 	public void loadVideo(String path) {
 		mediaPlayerComponent.mediaPlayer().media().startPaused(path);
 	}
-   
-   
 
-   
-   public static void main( String[] args ){
-      try {
-         UIManager.setLookAndFeel(
-         UIManager.getSystemLookAndFeelClassName());
-      } 
-      catch (Exception e) {
-         System.out.println(e);
-      }
-      App application = new App(TITLE);
-      application.setVisible(true);  
-      application.loadVideo(VIDEO_PATH);
-      application.initialize(); 
-   }
+
 }

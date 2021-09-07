@@ -21,7 +21,7 @@ public class Music extends Thread{
 	public Music(String name, boolean isloop) {
 		try {
 			this.isLoop = isLoop;
-			file = new File(("D:\\dev\\eclipse\\workspace\\basic\\src\\music\\" + name));
+			file = new File(("src/music/" + name));
 			fis = new FileInputStream(file);
 			bis = new BufferedInputStream(fis);
 			
@@ -54,7 +54,6 @@ public class Music extends Thread{
 	public void run () {
 		try {
 			do {
-				Thread.sleep(3000);
 				player.play();
 				fis = new FileInputStream(file);
 				bis = new BufferedInputStream(fis);		
@@ -66,7 +65,7 @@ public class Music extends Thread{
 	}
 	
 	public static void main(String[] args) {
-		Music m = new Music("music1.wav",true);
+		Music m = new Music("errorsound2.wav",true);
 		m.start();
 		
 	}
