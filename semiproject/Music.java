@@ -24,9 +24,7 @@ public class Music extends Thread{
 			file = new File(("src/music/" + name));
 			fis = new FileInputStream(file);
 			bis = new BufferedInputStream(fis);
-			
-			double volume = 0.5;
-			
+						
 			player = new Player(bis); 
 			
 			

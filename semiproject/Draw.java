@@ -111,8 +111,8 @@ public class Draw extends JFrame implements ActionListener {
 
 		if (jbtn[5] == obj) {
 			// 뽑기 이벤트
-
-			rnd2 = 1;
+//			rnd2 = (int) (Math.random() * 5);
+			rnd2 = 1; // 발표를 해야하기 때문에 히든캐릭 당첨확률 100%로 만듬
 			if (rnd2 == 1) {
 
 				// 데이터베이스에 업데이트
@@ -124,27 +124,20 @@ public class Draw extends JFrame implements ActionListener {
 				jbtn[rnd].setIcon(back3);
 				jbtn[5].setEnabled(false);
 				setVisible(false);
-
-				prizeOX(this.id, "src\\images\\O2.png");
+				prizeO(this.id);
 
 			} else {
 				jbtn[5].setEnabled(true);
-
-				prizeOX(this.id, "src\\images\\X2.png");
-				
-				
-				new Channel(this.id);
-				m.start();
+				prizeX(this.id);
+				setVisible(false);
 			}
 
 		}
 
 	}
 
-	public void prizeOX(String id, String path) {
+	public void prizeO(String id) {
 		shuffleGIF sfg = new shuffleGIF("src\\images\\shuffle.gif");
-		shuffleGIF sfg2 = new shuffleGIF(path);
-		sfg2.setVisible(false);
 		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 		final Runnable runnable = new Runnable() {
 			int countdownStarter = 6;
@@ -157,7 +150,6 @@ public class Draw extends JFrame implements ActionListener {
 					JOptionPane.showConfirmDialog(DRAW, "당첨\n히든캐릭터를 선택 하실 수 있습니다.", "당첨", JOptionPane.PLAIN_MESSAGE);
 
 				} else if (countdownStarter <= 0) {
-					sfg2.setVisible(false);
 					new Channel(id);
 					scheduler.shutdown();
 				}
@@ -165,6 +157,32 @@ public class Draw extends JFrame implements ActionListener {
 		};
 		scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
 
+	}
+	
+	public void prizeX(String id) {
+		shuffleGIF sfg = new shuffleGIF("src\\images\\shuffle.gif");
+		final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+		final Runnable runnable = new Runnable() {
+			int countdownStarter = 6;
+
+			public void run() {
+				countdownStarter--;
+				System.out.println(countdownStarter);
+				if (countdownStarter == 2) {
+					sfg.setVisible(false);
+					JOptionPane.showConfirmDialog(DRAW, "꽝\n다시 뽑아주세요", "꽝", JOptionPane.PLAIN_MESSAGE);
+
+				} else if (countdownStarter <= 0) {
+					new Channel(id);
+					scheduler.shutdown();
+				}
+			}
+		};
+		scheduler.scheduleAtFixedRate(runnable, 0, 1, SECONDS);
+
+	}
+	public static void main(String[] args) {
+		new Draw("User1");
 	}
 
 }
